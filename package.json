@@ -1,17 +1,30 @@
 {
-  "name": "postgres-api",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "dotenv": "^18.0.3",
-    "express": "^5.2.1",
-    "pg": "^8.23.0"
-  }
+    "name":  "postgres-api",
+    "version":  "1.0.0",
+    "description":  "",
+    "main":  "server.js",
+    "scripts":  {
+                    "start":  "node server.js",
+                    "test":  "node --test",
+                    "migrate":  "node scripts/migrate.js",
+                    "create-user":  "node scripts/create-user.js"
+                },
+    "keywords":  [
+
+                 ],
+    "author":  "",
+    "license":  "ISC",
+    "dependencies":  {
+                         "bcryptjs":  "^3.0.3",
+                         "cookie-parser":  "^1.4.7",
+                         "cors":  "^2.8.6",
+                         "dotenv":  "^18.0.3",
+                         "express":  "^5.2.1",
+                         "express-rate-limit":  "^8.7.0",
+                         "jsonwebtoken":  "^9.0.3",
+                         "pg":  "^8.23.0"
+                     },
+    "devDependencies":  {
+                            "supertest":  "^7.3.0"
+                        }
 }
