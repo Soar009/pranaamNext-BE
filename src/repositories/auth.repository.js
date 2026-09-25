@@ -4,7 +4,7 @@ class AuthRepository {
   async findUser(field, value) {
     if (!['id', 'email'].includes(field)) throw new Error('Invalid lookup');
     const predicate = field === 'email' ? 'lower(btrim(u.email))=$1' : 'u.id=$1';
-    const { rows } = await this.pool.query("SELECT u.*, COALESCE(array_agg(ur.role_code) FILTER (WHERE ur.role_code IS NOT NULL), '{}') AS roles FROM users u LEFT JOIN user_roles ur ON ur.user_id=u.id WHERE " + predicate + " GROUP BY u.id", [value]);
+    const { rows } = await this.pool.query("SELECT u.*, COALESCE(array_agg(r.code) FILTER (WHERE r.code IS NOT NULL), '{}') AS roles FROM users u LEFT JOIN user_roles ur ON ur.user_id=u.id LEFT JOIN roles r ON r.id=ur.role_id WHERE " + predicate + " GROUP BY u.id", [value]);
     // Ambiguous email identities must never authenticate an arbitrary account.
     return rows.length === 1 ? rows[0] : undefined;
   }

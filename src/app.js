@@ -4,7 +4,13 @@ const cors = require('cors');
 const { randomUUID } = require('node:crypto');
 const { ApiError } = require('./utils/errors');
 const { authRoutes } = require('./routes/auth.routes');
-function createApp({ service, config, pool }) {
+const { serviceRequestRoutes } = require('./routes/service-request.routes');
+const { ServiceRequestRepository } = require('./repositories/service-request.repository');
+const { ServiceRequestService } = require('./services/service-request.service');
+const { ReportsRepository } = require('./repositories/reports.repository');
+const { ReportsService } = require('./services/reports.service');
+const { reportsRoutes } = require('./routes/reports.routes');
+function createApp({ service, config, pool, requestService, reportsService }) {
   const app = express();
   app.disable('x-powered-by');
   app.use((req, res, next) => { req.correlationId = randomUUID(); res.set('X-Correlation-ID', req.correlationId); next(); });
@@ -22,6 +28,11 @@ function createApp({ service, config, pool }) {
   app.use(cookieParser());
   const routes = authRoutes(service, config);
   app.use('/api/v1/auth', routes);
+  if (requestService || pool) {
+    const requests = requestService || new ServiceRequestService(new ServiceRequestRepository(pool));
+    app.use('/api/v1/service-requests', serviceRequestRoutes(service, requests));
+  }
+  if (reportsService || pool) app.use('/api/v1/reports', reportsRoutes(service, reportsService || new ReportsService(new ReportsRepository(pool))));
   // Exact endpoint aliases requested by clients.
   app.use('/', routes);
   if (pool) app.get('/api/data', async (req, res) => {
@@ -33,7 +44,7 @@ function createApp({ service, config, pool }) {
     const status = err instanceof ApiError ? err.status : err.type === 'entity.parse.failed' ? 400 : err.type === 'entity.too.large' ? 413 : 500;
     res.status(status).json({ code: err instanceof ApiError ? err.code : status === 500 ? 'INTERNAL_ERROR' : 'INVALID_REQUEST',
       message: status === 500 ? 'Internal server error' : err instanceof ApiError ? err.message : 'Invalid request body',
-      details: null, correlationId: req.correlationId });
+      details: err instanceof ApiError ? err.details || null : null, correlationId: req.correlationId });
   });
   return app;
 }
